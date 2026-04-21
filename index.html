@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMC GNB - Comando de Zona Nro. 13 Falcón</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --gnb-burgundy: #800000;
+            --gnb-gold: #D4AF37;
+            --cyber-blue: #00f2ff;
+            --cyber-bg: #090c12;
+            --card-bg: rgba(15, 20, 30, 0.95);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cyber-bg);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .sidebar-item {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item.active {
+            background: rgba(0, 242, 255, 0.1);
+            border-left: 3px solid var(--cyber-blue);
+            color: var(--cyber-blue);
+            font-weight: 600;
+        }
+
+        .qualitative-text {
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: #94a3b8;
+            margin-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 0.75rem;
+        }
+
+        .filter-btn {
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .filter-btn.active {
+            background: rgba(0, 242, 255, 0.2);
+            border-color: var(--cyber-blue);
+            color: var(--cyber-blue);
+        }
+
+        .modal-active {
+            display: flex !important;
+            animation: fadeIn 0.15s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+
+        .responsive-table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-active { transform: translateX(0) !important; }
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { overflow: visible !important; background: white !important; color: black !important; }
+            .glass-card { border: 1px solid #000 !important; background: white !important; color: black !important; }
+            main { height: auto !important; position: static !important; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col text-slate-200">
+
+    <!-- MODAL DE DETALLES TÉCNICOS -->
+    <div id="modal-detail" class="fixed inset-0 z-[100] hidden items-center justify-center p-2 md:p-4 bg-black/90 backdrop-blur-md no-print">
+        <div class="glass-card max-w-5xl w-full p-4 md:p-6 border-2 border-cyan-500/30 flex flex-col max-h-[95vh] md:max-h-[90vh]">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <i id="modal-icon" class="fa-solid fa-database text-cyan-400 text-xl"></i>
+                    <div>
+                        <h3 id="modal-title" class="text-lg md:text-xl font-bold text-white uppercase tracking-tighter">Explorador de Datos</h3>
+                        <p id="modal-subtitle" class="text-[9px] md:text-[10px] text-slate-400 uppercase font-mono">SMC Falcón - Inteligencia Institucional</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="modal-content" class="flex-1 overflow-y-auto pr-2 text-sm"></div>
+            <div class="pt-4 border-t border-white/10 flex justify-end">
+                <button onclick="closeModal()" class="w-full md:w-auto px-10 py-2 bg-cyan-600/20 text-cyan-400 border border-cyan-500/40 rounded text-xs font-bold uppercase hover:bg-cyan-600/40 transition-all">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CABECERA -->
+    <nav class="h-14 border-b border-white/10 bg-black/60 flex items-center justify-between px-4 md:px-6 z-50 no-print">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="md:hidden text-white text-xl"><i class="fa-solid fa-bars"></i></button>
+            <div class="bg-white p-1 rounded hidden xs:block"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Logo_GNB.png/240px-Logo_GNB.png" alt="GNB" class="h-7 md:h-8"></div>
+            <h1 class="text-sm md:text-md font-black text-white tracking-tighter uppercase">SMC <span class="text-cyan-400">CZGNB-13</span></h1>
+        </div>
+        <div class="flex items-center gap-3 md:gap-6">
+            <div id="clock" class="text-xs md:text-sm font-mono text-cyan-400 font-bold border-r border-white/10 pr-3 md:pr-6 uppercase">00:00:00</div>
+            <div class="hidden sm:block text-[9px] text-slate-400 font-bold uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded border border-blue-500/20">
+                Sistema Operativo Activo
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-black/95 md:bg-black/40 md:relative md:w-60 border-r border-white/5 flex flex-col z-[60] -translate-x-full md:translate-x-0 transition-transform duration-300 no-print">
+            <div class="p-3 space-y-1">
+                <button onclick="showPage('dashboard')" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 text-xs rounded uppercase font-bold tracking-tight">
+                    <i class="fa-solid fa-gauge-high"></i> Dashboard
+                </button>
+                <button onclick="showPage('agenda')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-xs rounded uppercase font-bold tracking-tight">
+                    <i class="fa-solid fa-calendar-check"></i> Agenda ACA
+                </button>
+                <button onclick="showPage('personal')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-xs rounded uppercase font-bold tracking-tight">
+                    <i class="fa-solid fa-users-gear"></i> Talento Humano
+                </button>
+                <button onclick="showPage('logistica')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-xs rounded uppercase font-bold tracking-tight">
+                    <i class="fa-solid fa-gun"></i> Material de Guerra
+                </button>
+                <button onclick="showPage('operaciones')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-xs rounded uppercase font-bold tracking-tight">
+                    <i class="fa-solid fa-bolt"></i> Operaciones SE
+                </button>
+                <button onclick="showPage('detencion')" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 text-xs rounded uppercase font-bold tracking-tight">
+                    <i class="fa-solid fa-building-shield"></i> Resguardo
+                </button>
+            </div>
+            <div class="mt-auto p-4 border-t border-white/5 bg-black/20 text-center">
+                <button onclick="window.print()" class="w-full py-2.5 bg-slate-800 rounded text-[9px] uppercase font-bold tracking-widest border border-white/10 hover:bg-slate-700">
+                    <i class="fa-solid fa-print mr-2"></i> Reporte Físico
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="flex-1 p-3 md:p-6 overflow-y-auto">
+            
+            <!-- PÁGINA: DASHBOARD -->
+            <div id="page-dashboard" class="space-y-6">
+                <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-4 gap-2">
+                    <h2 class="text-xl font-black text-white uppercase tracking-tight italic">Análisis Situacional Regional</h2>
+                    <span class="text-[9px] text-cyan-500 font-mono tracking-widest uppercase bg-cyan-500/5 px-2 py-1 rounded">21-ABRIL-2026 09:00H</span>
+                </header>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-card p-4 border-l-4 border-blue-500">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Personal Total</p>
+                        <p class="text-3xl font-black">1,129</p>
+                        <div class="qualitative-text">
+                            Respaldo: <b>88 Oficiales</b> (47 disp.). Moral al <b>82%</b>. 31 efectivos en reposo médico verificados.
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 border-l-4 border-green-500">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Material de Guerra</p>
+                        <p class="text-3xl font-black">9,208</p>
+                        <div class="qualitative-text">
+                            Respaldo: Fusiles <b>FAL 7.62mm</b> resguardados. <b>465,460 municiones</b> auditables al 100%.
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 border-l-4 border-red-500">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Privados de Libertad</p>
+                        <p class="text-3xl font-black">75</p>
+                        <div class="qualitative-text">
+                            Respaldo: <b>06 M/P, 44 F/P</b>. Revista realizada a las 0900H sin novedades de alteración.
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 border-l-4 border-yellow-500">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">S/E Eléctricas</p>
+                        <p class="text-3xl font-black">11</p>
+                        <div class="qualitative-text">
+                            Respaldo: Vigilancia de 11 nodos críticos. <b>T. Josefa Camejo</b> con seguridad física estrecha.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="glass-card p-4 md:p-5">
+                        <h3 class="text-xs font-bold uppercase mb-6 tracking-widest text-cyan-400 underline decoration-cyan-500/30 underline-offset-8">Rendimiento Operativo (Incidencias)</h3>
+                        <div class="h-56 w-full"><canvas id="operativoChart"></canvas></div>
+                    </div>
+                    <div class="glass-card p-4 md:p-5">
+                        <h3 class="text-xs font-bold uppercase mb-6 tracking-widest text-yellow-400 underline decoration-yellow-500/30 underline-offset-8">Distribución Territorial de Fuerza</h3>
+                        <div class="h-56 w-full"><canvas id="personalEjeChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PÁGINA: AGENDA ACA (ACTUALIZADA CON TODOS LOS DATOS DEL PPT) -->
+            <div id="page-agenda" class="hidden space-y-6">
+                <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/10 pb-4 gap-2">
+                    <h2 class="text-xl font-black text-white uppercase tracking-tight italic">Agenda Concreta de Acción (ACA)</h2>
+                    <div class="flex items-center gap-4">
+                        <span class="text-[9px] text-cyan-500 font-mono tracking-widest uppercase bg-cyan-500/5 px-2 py-1 rounded">20ABR26 al 26ABR26</span>
+                    </div>
+                </header>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="agenda-container">
+                    <!-- Cargado por JS -->
+                </div>
+                
+                <div class="glass-card p-4 bg-blue-900/10 border-l-4 border-blue-500 mt-6 no-print">
+                    <p class="text-xs font-bold text-blue-400 uppercase mb-2">Respaldo Institucional:</p>
+                    <p class="text-[10px] text-slate-300 leading-relaxed uppercase font-mono">
+                        La presente agenda constituye la hoja de ruta operativa del Comando de Zona 13 Falcón. El cumplimiento de cada actividad es auditable por la COGEGUARNAC.
+                    </p>
+                </div>
+            </div>
+
+            <!-- PÁGINA: TALENTO HUMANO -->
+            <div id="page-personal" class="hidden space-y-6">
+                <h2 class="text-xl font-black text-white uppercase tracking-tight italic border-b border-white/10 pb-2">Gestión Nominal de Personal</h2>
+                <div class="glass-card overflow-hidden mb-6">
+                    <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase text-blue-400">Matriz Operativa CZ-13</span>
+                    </div>
+                    <div class="responsive-table-container">
+                        <table class="w-full text-left text-[11px] min-w-[600px]">
+                            <thead class="bg-black/40 text-slate-500 uppercase font-bold text-[8px]">
+                                <tr><th class="p-3">UNIDAD</th><th class="p-3">FUERZA</th><th class="p-3">SERV.</th><th class="p-3 text-red-400">PNAFU</th><th class="p-3 text-yellow-500">REPOSO</th><th class="p-3 text-blue-400">CURSO</th><th class="p-3 text-green-400">DISP.</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5" id="tp-table-body">
+                                <!-- Inyectado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-card p-4 md:p-6">
+                    <div class="flex flex-col gap-4 mb-6 border-b border-white/5 pb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-white uppercase tracking-widest">Explorador Nominal de Respaldo</h3>
+                            <p class="text-[9px] text-slate-500 mt-1">Haga clic en una categoría para cargar respaldo nominal</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button id="btn-pnafu" onclick="filterPersonalList('pnafu')" class="filter-btn active flex-1 md:flex-none">PNAFU</button>
+                            <button id="btn-reposo" onclick="filterPersonalList('reposo')" class="filter-btn flex-1 md:flex-none">REPOSO</button>
+                            <button id="btn-curso" onclick="filterPersonalList('curso')" class="filter-btn flex-1 md:flex-none">CURSO</button>
+                            <button id="btn-oficiales" onclick="filterPersonalList('oficiales')" class="filter-btn flex-1 md:flex-none">OFICIALES</button>
+                        </div>
+                    </div>
+                    <div id="nominal-list-container" class="min-h-[300px] bg-black/20 rounded border border-white/5 p-4"></div>
+                </div>
+            </div>
+
+            <!-- CONTENEDORES PARA OTROS MÓDULOS -->
+            <div id="page-logistica" class="hidden space-y-6"></div>
+            <div id="page-operaciones" class="hidden space-y-6"></div>
+            <div id="page-detencion" class="hidden space-y-6"></div>
+
+        </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="h-10 md:h-8 bg-black border-t border-white/5 flex flex-col md:flex-row items-center justify-between px-6 text-[8px] md:text-[9px] font-mono text-slate-500 uppercase no-print">
+        <div class="flex gap-4">
+            <span class="text-cyan-400 font-bold">NODO: FALCÓN_CZ13</span>
+            <span>DATA: AGENDA_CONCRETA_2026</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-green-500"></i>
+            <span>Sistema Seguro AES-256</span>
+        </div>
+    </footer>
+
+    <script>
+        const DB = {
+            agenda: [
+                { dia: "Lunes 20/04/26", items: [
+                    "Formación de lista y parte para la revisión de la documentación del personal.",
+                    "Entrega del oficio de solicitud de combustible (Ptte. Vivas).",
+                    "Entrega del Rdgma de inspección de los Parques de Armas a la ZODI (Cnel. Villasmil).",
+                    "Entrega de expedientes Administrativos Disciplinarios pendientes en la Inspectoría General.",
+                    "Presentación en el IESEOFANB de Oficiales Superiores: Tcnel. Alvarado Romer, Tcnel. Lizcano Elmer, Tcnel. Pérez Freddy, Tcnel. Solano Taylor.",
+                    "Inicio Curso Fortalecimiento de Capacidades Profesionales (03 oficiales subalternos / 13 efectivos T.P.) de las UUTT (D-132, D-133, DCR13-2)."
+                ] },
+                { dia: "Martes 21/04/26", items: [
+                    "Formación de Control para el Trote y Educación Física.",
+                    "Reunión para revisión de Expedientes Disciplinarios: S2 Bracho Bracho, S2 León González (D-132), S1 Rangel Zarraga (132), SM2 Valles, SM3 Crespo (DESUR).",
+                    "Verificación de Reposos Médicos (May. Gómez).",
+                    "Acto de Licenciamiento del Contingente SEP23/ENE24.",
+                    "Juramentación del Contingente ENE25.",
+                    "Comisión de retiro de alimentación de los ranchos para las UUTT (DCR13-2)."
+                ] },
+                { dia: "Miércoles 22/04/26", items: [
+                    "Formación para la Soberanía Nacional en los 05 ejes territoriales.",
+                    "Visualización del programa 'El Mazo Dando'.",
+                    "Jornada de atención psicológica (05 efectivos atendidos por jornada).",
+                    "Inicio del 2do. Curso de Tiro de Pistola Virtual para Motorizados (dictado por Polifalcón).",
+                    "Revista General y mantenimiento (cambio de lubricantes y filtros) del Parque Automotor de las UUTT."
+                ] },
+                { dia: "Jueves 23/04/26", items: [
+                    "Despliegue Barrio Tricolor Centinela (DCR 13-1).",
+                    "Despliegue Bricomil de Salud o Educación (DCR 13-2).",
+                    "Taller en materia de prevención antidrogas (D-131) - Responsable: Tcnel. Pineda.",
+                    "Jornada de Atención Médica para Funcionarios (18 a 35 años) - Policlínica de Polifalcón (GM Venezuela Joven)."
+                ] },
+                { dia: "Viernes 24/04/26", items: [
+                    "Mantenimiento general de Unidades y vehículos operativos.",
+                    "Misa y Culto Cristiano institucional.",
+                    "Entrega de Radiograma de inspección final de Parques de Armas a la ZODI Falcón (Cnel. Villasmil)."
+                ] },
+                { dia: "Sábado 25/04/26", items: [
+                    "Sábado Militar: Inspección a Instalaciones Estratégicas y Sub-estaciones.",
+                    "Arreglos administrativos y mantenimiento de cuarteles regionales.",
+                    "Limpieza profunda y mantenimiento de armamento orgánico en los 05 ejes."
+                ] },
+                { dia: "Domingo 26/04/26", items: [
+                    "Actividad recreativa familiar para efectivos destacados del Comando de Zona.",
+                    "Mantenimiento preventivo y limpieza de flota vehicular de servicio."
+                ] }
+            ],
+            tp_stats: [
+                { u: "D-131", f: 299, s: 94, d: 28, pnafu: 4, rep: 3, cur: 45 },
+                { u: "D-132", f: 167, s: 57, d: 19, pnafu: 0, rep: 7, cur: 3 },
+                { u: "D-133", f: 114, s: 22, d: 32, pnafu: 1, rep: 5, cur: 0 },
+                { u: "D-134", f: 123, s: 37, d: 19, pnafu: 0, rep: 6, cur: 0 },
+                { u: "DESUR-13", f: 99, s: 21, d: 7, pnafu: 1, rep: 3, cur: 0 },
+                { u: "CIA APOYO", f: 161, s: 10, d: 30, pnafu: 2, rep: 4, cur: 0 }
+            ],
+            oficiales: [
+                { r: "TCNEL", n: "PEREZ ALMENAR FREDDY", sit: "IESEOFANB" },
+                { r: "TCNEL", n: "LARA VIVAS ODALYS", sit: "PERMISO OPERATIVO" },
+                { r: "MAY", n: "OMAÑA RODRÍGUEZ ÁNGEL", sit: "PERMISO OPERATIVO" },
+                { r: "PTTE", n: "VIVAS MORENO JESUS", sit: "COMISIÓN COMBUSTIBLE" }
+            ],
+            pnafu_nom: [
+                { u: "D-131", n: "S2 MIQUILENA MARIANA", id: "28.159.334", e: "En Sustanciación", f: "27/12/25" },
+                { u: "D-133", n: "S1 ALDANA ELISANDRO", id: "30.310.784", e: "Fiscalía", f: "01/03/26" },
+                { u: "CIA APOYO", n: "S2 MENDOZA CARLOS", id: "26.941.731", e: "En Sustanciación", f: "27/12/25" }
+            ],
+            reposo_nom: [
+                { u: "CIA APOYO", n: "SM2 FERNANDEZ RONNY", p: "Cardiopatía Isquémica", v: "01/04/26" },
+                { u: "D-131", n: "S1 CASTELLANO GREISIMAR", p: "Amputación Pierna D.", v: "Revisión" },
+                { u: "D-134", n: "SM3 PIÑA PIÑA ELIAS", p: "Paraplejia (Fract. Columna)", v: "ABSOLUTO" }
+            ],
+            curso_nom: [
+                { r: "TCNEL", n: "ALVARADO GUERRA ROMER", u: "D-132", c: "IESEOFANB" },
+                { r: "PTTE", n: "MANRIQUE MENDEZ JESUS", u: "D-133", c: "FORTALECIMIENTO" },
+                { r: "S1", n: "ZARRAGA POLANCO EDUARDO", u: "D-131", c: "SEGURIDAD VIAL" }
+            ],
+            logistica: [
+                { e: "CENTRAL", resp: "Tcnel. Rodríguez Flores", f: 1800, m: 153400 },
+                { e: "PENÍNSULA", resp: "Tcnel. Pérez Almenar", f: 600, m: 144060 },
+                { e: "OCCIDENTAL", resp: "Tcnel. Zapata Uzcategui", f: 2858, m: 72000 },
+                { e: "ORIENTAL", resp: "Tcnel. Lizcano / Lara", f: 3950, m: 96000 }
+            ],
+            subestaciones: [
+                { n: "S/E JUDIBANA", p: ["S1 JHONNY LARA", "S2 LEONARDO GOMEZ"] },
+                { n: "S/E ISIRO", p: ["S1 ANDERSON LOPEZ", "S2 CARLOS LEON"] },
+                { n: "T. JOSEFA CAMEJO", p: ["S2 WILFREDO SANDOVAL", "S2 REINADO FIGUEROA"] }
+            ],
+            detencion: [
+                { u: "D-131", mp: 1, fp: 0, t: 1 },
+                { u: "D-132", mp: 2, fp: 11, t: 17 },
+                { u: "D-133", mp: 0, fp: 9, t: 15 }
+            ]
+        };
+
+        // --- LÓGICA ---
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
+
+        function showPage(id) {
+            document.querySelectorAll('main > div').forEach(div => div.classList.add('hidden'));
+            const target = document.getElementById('page-' + id);
+            if(target) target.classList.remove('hidden');
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            const btn = document.querySelector(`button[onclick*="'${id}'"]`);
+            if(btn) btn.classList.add('active');
+            if(window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleSidebar();
+
+            // Renderizar dinámicos
+            if(id === 'agenda') renderAgenda();
+            if(id === 'personal') renderPersonal();
+            if(id === 'logistica') renderLogistica();
+            if(id === 'operaciones') renderOperaciones();
+            if(id === 'detencion') renderDetencion();
+        }
+
+        function renderAgenda() {
+            const container = document.getElementById('agenda-container');
+            container.innerHTML = DB.agenda.map(dia => `
+                <div class="glass-card p-5 border-t-2 border-cyan-500">
+                    <h4 class="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-day"></i> ${dia.dia}
+                    </h4>
+                    <ul class="space-y-3 text-[10px] text-slate-300 leading-relaxed">
+                        ${dia.items.map(i => `<li class="flex gap-2"><span class="text-cyan-500 font-bold">•</span> ${i}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+
+        function renderPersonal() {
+            const tbody = document.getElementById('tp-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = DB.tp_stats.map(s => `
+                <tr class="hover:bg-white/5 transition-all">
+                    <td class="p-3 font-bold text-white uppercase">${s.u}</td>
+                    <td class="p-3 font-mono text-slate-400">${s.f}</td>
+                    <td class="p-3">${s.s}</td>
+                    <td class="p-3 font-bold interactive-cell" onclick="filterPersonalList('pnafu')">${s.pnafu}</td>
+                    <td class="p-3 font-bold interactive-cell" onclick="filterPersonalList('reposo')">${s.rep}</td>
+                    <td class="p-3 font-bold interactive-cell" onclick="filterPersonalList('curso')">${s.cur}</td>
+                    <td class="p-3 text-green-400 font-bold">${s.d}</td>
+                </tr>
+            `).join('');
+            filterPersonalList('pnafu');
+        }
+
+        function filterPersonalList(type) {
+            const container = document.getElementById('nominal-list-container');
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById('btn-' + type);
+            if(activeBtn) activeBtn.classList.add('active');
+
+            let html = `<div class="responsive-table-container"><table class="w-full text-left text-[11px] min-w-[500px]">
+                <thead class="text-slate-500 uppercase text-[9px] border-b border-white/10">
+                    <tr><th class="p-3">Unidad</th><th class="p-3">Apellidos y Nombres</th><th class="p-3">Respaldo Cualitativo / Estatus</th></tr>
+                </thead><tbody class="divide-y divide-white/5">`;
+
+            if(type === 'pnafu') {
+                DB.pnafu_nom.forEach(x => {
+                    html += `<tr><td class="p-3 font-bold">${x.u}</td><td class="p-3 text-white">${x.n}</td><td class="p-3 text-red-400 font-bold uppercase">${x.e} (Desde: ${x.f})</td></tr>`;
+                });
+            } else if(type === 'reposo') {
+                DB.reposo_nom.forEach(x => {
+                    html += `<tr><td class="p-3 font-bold">${x.u}</td><td class="p-3 text-white">${x.n}</td><td class="p-3 text-yellow-500 uppercase font-bold">${x.p}</td></tr>`;
+                });
+            } else if(type === 'curso') {
+                DB.curso_nom.forEach(x => {
+                    html += `<tr><td class="p-3 font-bold">${x.r}</td><td class="p-3 text-white">${x.n}</td><td class="p-3 text-cyan-400 font-bold uppercase">${x.c}</td></tr>`;
+                });
+            } else if(type === 'oficiales') {
+                DB.oficiales.forEach(x => {
+                    html += `<tr><td class="p-3 font-bold">${x.r}</td><td class="p-3 text-white">${x.n}</td><td class="p-3 text-blue-400 font-bold uppercase">${x.sit}</td></tr>`;
+                });
+            }
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        // --- RENDERIZADORES ADICIONALES (Para evitar errores de referencia) ---
+        function renderLogistica() {
+            const cont = document.getElementById('page-logistica');
+            cont.innerHTML = `<h2 class="text-xl font-black text-white uppercase mb-6 tracking-tight italic border-b border-white/10 pb-2">Material de Guerra y Municiones</h2>
+                <div class="glass-card overflow-hidden">
+                    <div class="responsive-table-container">
+                        <table class="w-full text-left text-[11px] min-w-[600px]">
+                            <thead class="bg-black/40 text-slate-500 uppercase text-[9px] font-bold"><tr><th class="p-4">Eje</th><th class="p-4">Responsable</th><th class="p-4">Fusiles FAL</th><th class="p-4 text-cyan-400">Munición</th></tr></thead>
+                            <tbody class="divide-y divide-white/5">
+                                ${DB.logistica.map(l => `<tr><td class="p-4 font-bold text-white uppercase">${l.e}</td><td class="p-4 text-slate-400 uppercase">${l.resp}</td><td class="p-4 font-black">${l.f}</td><td class="p-4 font-black text-cyan-400">${l.m.toLocaleString()}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        function renderOperaciones() {
+            const cont = document.getElementById('page-operaciones');
+            cont.innerHTML = `<h2 class="text-xl font-black text-white uppercase mb-6 tracking-tight italic border-b border-white/10 pb-2">Seguridad de Infraestructura</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${DB.subestaciones.map(se => `<div class="glass-card p-4 border-l-4 border-yellow-500"><h4 class="text-xs font-bold text-white mb-2 uppercase">${se.n}</h4><p class="text-[9px] text-slate-500 font-bold mb-2 uppercase">Guardia Nominal:</p><ul class="text-[10px] space-y-1">${se.p.map(n => `<li class="text-slate-300">● ${n}</li>`).join('')}</ul></div>`).join('')}
+                </div>`;
+        }
+
+        function renderDetencion() {
+            const cont = document.getElementById('page-detencion');
+            cont.innerHTML = `<h2 class="text-xl font-black text-white uppercase mb-6 tracking-tight italic border-b border-white/10 pb-2">Resguardo de Privados de Libertad</h2>
+                <div class="glass-card overflow-hidden">
+                    <div class="responsive-table-container">
+                        <table class="w-full text-left text-[11px] min-w-[500px]">
+                            <thead class="bg-black/40 text-slate-500 uppercase text-[9px] font-bold"><tr><th class="p-4">Unidad</th><th class="p-4">Masc.</th><th class="p-4">Fem.</th><th class="p-4 text-red-500">Total</th></tr></thead>
+                            <tbody class="divide-y divide-white/5">
+                                ${DB.detencion.map(d => `<tr><td class="p-4 font-bold text-white uppercase">${d.u}</td><td class="p-4">${d.mp}</td><td class="p-4">${d.fp}</td><td class="p-4 font-black text-red-500">${d.t}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        function closeModal() { document.getElementById('modal-detail').classList.remove('modal-active'); }
+
+        window.onload = () => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-VE', { hour12: false });
+            setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-VE', { hour12: false }); }, 1000);
+            
+            // CHARTS
+            new Chart(document.getElementById('operativoChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['0900H', '1200H', '1500H', '1800H', '2100H', '0000H'],
+                    datasets: [{ label: 'Incidencias', data: [12, 19, 3, 5, 2, 8], borderColor: '#00f2ff', tension: 0.4, fill: true, backgroundColor: 'rgba(0, 242, 255, 0.1)' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 9 } } }, x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9 } } } } }
+            });
+
+            new Chart(document.getElementById('personalEjeChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['CENTRAL', 'PENÍNSULA', 'OCCIDENTAL', 'ORIENTAL'],
+                    datasets: [{ data: [167, 299, 123, 539], backgroundColor: ['#00f2ff', '#fbbf24', '#22c55e', '#ef4444'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 9 } } } }, cutout: '70%' }
+            });
+
+            showPage('dashboard');
+        };
+    </script>
+</body>
+</html>
